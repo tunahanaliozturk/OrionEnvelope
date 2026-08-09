@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <PackageId>OrionEnvelope</PackageId>
+    <Description>One HTTP contract for the whole API: every success is a typed { data, meta }, every failure is an RFC 9457 problem+json, and pagination metadata rides in the same envelope — projected mechanically from OrionResult's Result&lt;T&gt; instead of hand-serialized per endpoint. Source-gen JSON, reflection-free and AOT-clean. Wave 1 is the types and the projection; the ASP.NET filters and OpenAPI schema land in later waves.</Description>
+    <PackageTags>orion;api;envelope;problemdetails;rfc9457;result;json;dotnet</PackageTags>
+    <RootNamespace>Moongazing.OrionEnvelope</RootNamespace>
+    <IsAotCompatible>true</IsAotCompatible>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="OrionResult" Version="0.9.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Options" Version="9.0.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="Moongazing.OrionEnvelope.Tests" />
+  </ItemGroup>
+</Project>

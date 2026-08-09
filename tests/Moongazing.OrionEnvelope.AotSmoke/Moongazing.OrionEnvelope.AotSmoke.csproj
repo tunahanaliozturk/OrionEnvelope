@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <!--
+      The NativeAOT publish smoke test. `dotnet publish` must succeed with zero trim/AOT warnings,
+      serializing and deserializing an Envelope<T> and a ProblemDetails through a source-gen context
+      (no reflection), in a rooted, trimmed, native binary that exits 0.
+    -->
+    <TargetFramework>net10.0</TargetFramework>
+    <TargetFrameworks />
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
+    <PublishAot>true</PublishAot>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <TrimmerSingleWarn>false</TrimmerSingleWarn>
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Moongazing.OrionEnvelope\Moongazing.OrionEnvelope.csproj" />
+  </ItemGroup>
+</Project>
