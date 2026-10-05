@@ -1,0 +1,108 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="760" viewBox="0 0 1200 760">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#64748b"/>
+    </marker>
+    <marker id="arrow-fail" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#dc2626"/>
+    </marker>
+  </defs>
+  <style>
+    text { font-family: "Segoe UI", Inter, "Helvetica Neue", Arial, sans-serif; fill: #1e1b4b; }
+    .title { font-size: 24px; font-weight: 700; }
+    .subtitle { font-size: 14px; fill: #475569; }
+    .label { font-size: 15px; font-weight: 600; }
+    .small { font-size: 12.5px; fill: #475569; }
+    .code { font-family: "Cascadia Code", Consolas, "SF Mono", monospace; font-size: 13px; fill: #3730a3; }
+    .edge { font-size: 12.5px; fill: #334155; }
+    .step { fill: #eef2ff; stroke: #4f46e5; stroke-width: 2; }
+    .ext { fill: #f0f9ff; stroke: #0284c7; stroke-width: 2; }
+    .ok { fill: #ecfdf5; stroke: #059669; stroke-width: 2; }
+    .fail { fill: #fef2f2; stroke: #dc2626; stroke-width: 2; }
+    .decision { fill: #fffbeb; stroke: #d97706; stroke-width: 2; }
+    .note { fill: #f8fafc; stroke: #cbd5e1; stroke-width: 1.5; stroke-dasharray: 4 3; }
+    .lane { stroke: #cbd5e1; stroke-width: 1.5; stroke-dasharray: 6 5; }
+    .flow { fill: none; stroke: #64748b; stroke-width: 2; marker-end: url(#arrow); }
+    .flow.alt { stroke: #dc2626; stroke-dasharray: 6 4; marker-end: url(#arrow-fail); }
+    .flow.back { stroke-dasharray: 6 4; }
+    .badge { fill: #4f46e5; }
+    .badge-text { font-size: 12px; font-weight: 700; fill: #ffffff; }
+  </style>
+
+  <rect width="1200" height="760" fill="#ffffff"/>
+
+  <text class="title" x="40" y="52">OrionEnvelope - projecting a Result&lt;T&gt; at the boundary</text>
+  <text class="subtitle" x="40" y="78">Call ToEnvelope on a success and ToProblemDetails on a failure; calling the wrong one throws.</text>
+
+  <!-- wrong call on a failure -->
+  <rect class="fail" x="640" y="100" width="260" height="60" rx="14"/>
+  <text class="label" x="770" y="127" text-anchor="middle">InvalidOperationException</text>
+  <text class="small" x="770" y="147" text-anchor="middle">when result.IsFailure</text>
+
+  <!-- start -->
+  <rect class="step" x="40" y="200" width="200" height="72" rx="14"/>
+  <text class="code" x="140" y="232" text-anchor="middle">Result&lt;T&gt; result</text>
+  <text class="small" x="140" y="254" text-anchor="middle">returned by your service</text>
+
+  <path class="flow" d="M240,236 L318,236"/>
+
+  <polygon class="decision" points="430,176 540,236 430,296 320,236"/>
+  <text class="code" x="430" y="241" text-anchor="middle">IsSuccess</text>
+
+  <!-- success path -->
+  <path class="flow" d="M540,236 L638,236"/>
+  <text class="edge" x="589" y="226" text-anchor="middle">true</text>
+  <rect class="step" x="640" y="200" width="260" height="72" rx="14"/>
+  <text class="code" x="770" y="232" text-anchor="middle">result.ToEnvelope(meta)</text>
+  <text class="small" x="770" y="254" text-anchor="middle">Data = result.Value, Meta = meta</text>
+
+  <path class="flow alt" d="M770,200 L770,162"/>
+
+  <path class="flow" d="M900,236 L958,236"/>
+  <rect class="ok" x="960" y="200" width="200" height="72" rx="14"/>
+  <text class="label" x="1060" y="232" text-anchor="middle">Envelope&lt;T&gt;</text>
+  <text class="code" x="1060" y="254" text-anchor="middle">{ data, meta }</text>
+
+  <!-- failure path -->
+  <path class="flow" d="M430,296 L430,378"/>
+  <text class="edge" x="440" y="342">false</text>
+  <rect class="step" x="270" y="380" width="320" height="72" rx="14"/>
+  <text class="code" x="430" y="412" text-anchor="middle">ToProblemDetails(traceId, instance)</text>
+  <text class="small" x="430" y="434" text-anchor="middle">both arguments optional</text>
+
+  <path class="flow" d="M590,416 L638,416"/>
+  <rect class="step" x="640" y="352" width="280" height="128" rx="14"/>
+  <text class="label" x="780" y="380" text-anchor="middle">Fill the problem</text>
+  <text class="small" x="780" y="404" text-anchor="middle">Status, Title from Errors[0].Kind</text>
+  <text class="small" x="780" y="424" text-anchor="middle">Detail, Code from Errors[0]</text>
+  <text class="small" x="780" y="444" text-anchor="middle">errors = FieldErrors of every error</text>
+  <text class="small" x="780" y="464" text-anchor="middle">Type = "about:blank"</text>
+
+  <path class="flow" d="M920,416 L958,416"/>
+  <rect class="fail" x="960" y="380" width="200" height="72" rx="14"/>
+  <text class="label" x="1060" y="412" text-anchor="middle">ProblemDetails</text>
+  <text class="small" x="1060" y="434" text-anchor="middle">RFC 9457 problem+json</text>
+
+  <!-- wrong call on a success -->
+  <path class="flow alt" d="M430,452 L430,508"/>
+  <rect class="fail" x="300" y="510" width="260" height="60" rx="14"/>
+  <text class="label" x="430" y="537" text-anchor="middle">InvalidOperationException</text>
+  <text class="small" x="430" y="557" text-anchor="middle">when result.IsSuccess</text>
+
+  <!-- status map -->
+  <rect class="note" x="40" y="600" width="1120" height="130" rx="10"/>
+  <text class="code" x="60" y="630">StatusFor(ErrorKind)</text>
+  <text class="small" x="230" y="630">sets ProblemDetails.Status; any other kind maps to 500</text>
+
+  <text class="code" x="60" y="670">Validation</text><text class="label" x="250" y="670" text-anchor="end">400</text>
+  <text class="code" x="280" y="670">NotFound</text><text class="label" x="470" y="670" text-anchor="end">404</text>
+  <text class="code" x="500" y="670">Conflict</text><text class="label" x="690" y="670" text-anchor="end">409</text>
+  <text class="code" x="720" y="670">FailedPrecondition</text><text class="label" x="910" y="670" text-anchor="end">422</text>
+  <text class="code" x="940" y="670">Unauthorized</text><text class="label" x="1130" y="670" text-anchor="end">401</text>
+
+  <text class="code" x="60" y="706">Forbidden</text><text class="label" x="250" y="706" text-anchor="end">403</text>
+  <text class="code" x="280" y="706">RateLimited</text><text class="label" x="470" y="706" text-anchor="end">429</text>
+  <text class="code" x="500" y="706">Timeout</text><text class="label" x="690" y="706" text-anchor="end">504</text>
+  <text class="code" x="720" y="706">Unavailable</text><text class="label" x="910" y="706" text-anchor="end">503</text>
+  <text class="code" x="940" y="706">Unexpected</text><text class="label" x="1130" y="706" text-anchor="end">500</text>
+</svg>
