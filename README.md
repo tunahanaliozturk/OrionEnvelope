@@ -1,15 +1,22 @@
 <p align="center">
-  <img src="docs/logo.png" alt="OrionEnvelope" width="150" />
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/logo.png">
+    <img src="docs/icon.png" alt="OrionEnvelope logo" width="150">
+  </picture>
 </p>
 
 # OrionEnvelope
 
 [![CI/CD](https://github.com/tunahanaliozturk/OrionEnvelope/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/tunahanaliozturk/OrionEnvelope/actions/workflows/ci-cd.yml)
 [![NuGet](https://img.shields.io/nuget/v/OrionEnvelope.svg)](https://www.nuget.org/packages/OrionEnvelope/)
+[![License: MIT](https://img.shields.io/badge/license-MIT-yellow.svg)](LICENSE)
+![.NET](https://img.shields.io/badge/.NET-8.0%20%7C%209.0%20%7C%2010.0-purple.svg)
 
 **One HTTP contract for the whole API.** Every success is a typed `{ data, meta }`, every failure is an RFC 9457 `problem+json`, and pagination metadata rides in the same envelope — projected mechanically from [OrionResult](https://github.com/tunahanaliozturk/OrionResult)'s `Result<T>`, not hand-serialized per endpoint.
 
 An API with 80 endpoints written by six people has 80 slightly different response shapes: some return the bare object, some `{ data }`, some `{ result, success, error }`; errors are a plain string here, a `{ message }` there, a stack trace in prod somewhere else. The cost is real — every client writes bespoke unwrapping, error handling can't be centralized, and no OpenAPI consumer can generate a clean typed client. ASP.NET Core ships `ProblemDetails`, but nothing enforces it on every error path and nothing standardizes the *success* envelope or where pagination lives. OrionEnvelope makes the envelope a **projection, not a chore**: an endpoint that returns a `Result` is correctly shaped with zero envelope code.
+
+![OrionEnvelope overview: your service returns Result<T>; EnvelopeMapper projects it to Envelope<T> or ProblemDetails, which serialize through System.Text.Json source generation](docs/diagrams/overview.png)
 
 ## Features
 
@@ -25,9 +32,15 @@ An API with 80 endpoints written by six people has 80 slightly different respons
 dotnet add package OrionEnvelope
 ```
 
+| Package | What it is |
+|---------|------------|
+| `OrionEnvelope` | `Envelope<T>`, `Meta`, `ProblemDetails`, the `Result<T>` projection (`EnvelopeMapper`), the source-gen JSON context and `AddOrionEnvelope` |
+
 ## Usage
 
 Return `Result<T>` from your services and project it at the boundary:
+
+![OrionEnvelope result projection: IsSuccess picks ToEnvelope or ToProblemDetails, the wrong call throws InvalidOperationException, and StatusFor maps each ErrorKind to an HTTP status](docs/diagrams/result-projection.png)
 
 ```csharp
 using Moongazing.OrionEnvelope;
@@ -43,7 +56,7 @@ if (result.IsSuccess)
 else
 {
     ProblemDetails problem = result.ToProblemDetails(traceId);
-    // e.g. 404 application/problem+json → { "type":"about:blank","title":"Not Found","status":404,"code":"...","traceId":"..." }
+    // e.g. 404 application/problem+json → { "type":"about:blank","title":"Not Found","status":404,"detail":"...","traceId":"...","code":"..." }
 }
 ```
 
@@ -55,7 +68,7 @@ var envelope = Envelope.Ok(items, meta);
 // { "data": [ ... ], "meta": { "traceId": "...", "page": { "nextCursor": "eyJ...", "hasMore": true } } }
 ```
 
-The `EnvelopeResultFilter` / minimal-API filter that applies this automatically (no per-endpoint code), the exception→`problem+json` mapper, and the OpenAPI schema contribution arrive in later waves; today you call the projection at the boundary.
+The `EnvelopeResultFilter` / minimal-API filter that applies this automatically (no per-endpoint code), the exception→`problem+json` mapper, and the OpenAPI schema contribution arrive in later waves; today you call the projection at the boundary. `services.AddOrionEnvelope(o => ...)` already registers `EnvelopeOptions` (`WrapSuccessResponses`, `ProblemDetailsForErrors`, `IncludeTraceId`, all `true` by default) so the DI convention is stable, but nothing in Wave 1 reads those options yet.
 
 ## AOT-clean serialization
 
@@ -87,6 +100,7 @@ Follows [Semantic Versioning](https://semver.org/). Multi-targets `net8.0`, `net
 ## Documentation
 
 - [CHANGELOG.md](CHANGELOG.md) — release notes.
+- [SECURITY.md](SECURITY.md) — how to report a vulnerability privately.
 
 ## Contributing
 
