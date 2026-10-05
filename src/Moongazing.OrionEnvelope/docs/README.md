@@ -13,6 +13,7 @@ Depends on `OrionResult` 0.9.x for `Result<T>`, `Error` and `ErrorKind`.
 ## Quick start
 
 ```csharp
+using System.Text.Json;
 using Moongazing.OrionEnvelope;
 using Moongazing.OrionResult;
 
@@ -22,6 +23,7 @@ if (result.IsSuccess)
 {
     var meta = new Meta { TraceId = traceId, Page = new PageMeta(nextCursor, hasMore: true) };
     Envelope<OrderDto> ok = result.ToEnvelope(meta);
+    string json = JsonSerializer.Serialize(ok, ApiJson.Default.EnvelopeOrderDto);
     // { "data": { ... }, "meta": { "traceId": "...", "page": { "nextCursor": "...", "hasMore": true } } }
 }
 else
@@ -31,16 +33,17 @@ else
 }
 ```
 
-Serialize through a source-gen context so no reflection is involved (AOT-safe):
+`ApiJson` is your own source-gen context, so serialization involves no reflection (AOT-safe):
 
 ```csharp
+using System.Text.Json.Serialization;
+using Moongazing.OrionEnvelope;
+
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
                              DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
 [JsonSerializable(typeof(Envelope<OrderDto>))]
 [JsonSerializable(typeof(ProblemDetails))]
 public partial class ApiJson : JsonSerializerContext;
-
-string json = JsonSerializer.Serialize(ok, ApiJson.Default.EnvelopeOrderDto);
 ```
 
 ## What you get
@@ -50,7 +53,7 @@ string json = JsonSerializer.Serialize(ok, ApiJson.Default.EnvelopeOrderDto);
 - `ProblemDetails`: `Type` (default `about:blank`), `Title`, `Status`, `Detail`, `Instance`, plus the extensions `TraceId`, `Code` and per-field `Errors` (`ProblemFieldError`).
 - `EnvelopeMapper`: `Result<T>.ToEnvelope(meta)`, `Result<T>.ToProblemDetails(traceId, instance)`, `Error.ToProblemDetails(traceId, instance)` and `StatusFor(ErrorKind)`.
 - `OrionEnvelopeJsonContext`: a source-gen context for `Meta`, `PageMeta`, `ProblemDetails` and `ProblemFieldError`. Add your own `Envelope<TDto>` types to your context.
-- `AddOrionEnvelope(Action<EnvelopeOptions>?)` registers `EnvelopeOptions` (`WrapSuccessResponses`, `ProblemDetailsForErrors`, `IncludeTraceId`, all `true` by default).
+- `AddOrionEnvelope(Action<EnvelopeOptions>?)` (namespace `Moongazing.OrionEnvelope.DependencyInjection`) registers `EnvelopeOptions` (`WrapSuccessResponses`, `ProblemDetailsForErrors`, `IncludeTraceId`, all `true` by default).
 
 ## Behaviour
 
