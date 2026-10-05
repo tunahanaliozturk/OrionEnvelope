@@ -68,21 +68,26 @@ var envelope = Envelope.Ok(items, meta);
 // { "data": [ ... ], "meta": { "traceId": "...", "page": { "nextCursor": "eyJ...", "hasMore": true } } }
 ```
 
-The `EnvelopeResultFilter` / minimal-API filter that applies this automatically (no per-endpoint code), the exception→`problem+json` mapper, and the OpenAPI schema contribution arrive in later waves; today you call the projection at the boundary. `services.AddOrionEnvelope(o => ...)` already registers `EnvelopeOptions` (`WrapSuccessResponses`, `ProblemDetailsForErrors`, `IncludeTraceId`, all `true` by default) so the DI convention is stable, but nothing in Wave 1 reads those options yet.
+The `EnvelopeResultFilter` / minimal-API filter that applies this automatically (no per-endpoint code), the exception→`problem+json` mapper, and the OpenAPI schema contribution arrive in later waves; today you call the projection at the boundary. `services.AddOrionEnvelope(o => ...)` (add `using Moongazing.OrionEnvelope.DependencyInjection;`) already registers `EnvelopeOptions` (`WrapSuccessResponses`, `ProblemDetailsForErrors`, `IncludeTraceId`, all `true` by default) so the DI convention is stable, but nothing in Wave 1 reads those options yet.
 
 ## AOT-clean serialization
 
 `Envelope<T>` is generic, so its payload type is application-specific: add your payload types to a source-gen context and serialize through the typed `JsonTypeInfo`.
 
 ```csharp
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using Moongazing.OrionEnvelope;
+
+// AOT-safe: use the typed JsonTypeInfo overloads, not the JsonSerializerOptions ones.
+Envelope<OrderDto> envelope = Envelope.Ok(order, new Meta { TraceId = traceId });
+string json = JsonSerializer.Serialize(envelope, ApiJson.Default.EnvelopeOrderDto);
+
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
                              DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
 [JsonSerializable(typeof(Envelope<OrderDto>))]
 [JsonSerializable(typeof(ProblemDetails))]
 public partial class ApiJson : JsonSerializerContext;
-
-// AOT-safe: use the typed JsonTypeInfo overloads, not the JsonSerializerOptions ones.
-var json = JsonSerializer.Serialize(envelope, ApiJson.Default.EnvelopeOrderDto);
 ```
 
 The library ships `OrionEnvelopeJsonContext` covering the non-generic types (`Meta`, `PageMeta`, `ProblemDetails`, `ProblemFieldError`).
